@@ -32,12 +32,13 @@ const SubmitExpense: React.FC = () => {
     }
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif']
     },
-    multiple: false
+    multiple: false,
+    noClick: true, // Prevent default click-to-open
   });
 
   const capturePhoto = () => {
@@ -110,7 +111,10 @@ const SubmitExpense: React.FC = () => {
         <div className="flex space-x-4 mb-6">
           <button
             type="button"
-            onClick={() => setCaptureMode('upload')}
+            onClick={() => {
+              setCaptureMode('upload');
+              open(); // Open file dialog
+            }}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
               captureMode === 'upload'
                 ? 'bg-blue-500 text-white'
