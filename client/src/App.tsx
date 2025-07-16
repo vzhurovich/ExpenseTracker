@@ -34,7 +34,7 @@ const PrivateRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
         <div className="min-h-screen bg-gray-50">
           <Routes>
             <Route path="/login" element={<Login />} />

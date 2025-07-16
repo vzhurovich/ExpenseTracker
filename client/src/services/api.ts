@@ -2,9 +2,7 @@ import axios from 'axios';
 
 export const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  // Removed global Content-Type header to allow FormData uploads
 });
 
 // Request interceptor to add auth token
