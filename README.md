@@ -69,8 +69,8 @@ npm start
 
 ### 4. Access the Application
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
-- API Health Check: http://localhost:5000/api/health
+- Backend API: http://localhost:5001
+- API Health Check: http://localhost:5001/api/health
 
 ### 5. Production Build
 

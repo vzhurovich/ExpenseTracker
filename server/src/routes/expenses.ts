@@ -71,6 +71,42 @@ router.post('/submit', upload.single('receipt'), [
         status: 'pending'
       });
 
+      // Send notification email to all admins
+      console.log('Preparing to send admin notification email...');
+      const nodemailer = require('nodemailer');
+      // Configure transporter (use environment variables in production)
+      const transporter = nodemailer.createTransport({
+        service: process.env.EMAIL_SERVICE || 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      // Get all admin emails
+      db.all('SELECT email FROM users WHERE role = ?', ['admin'], (err, admins) => {
+        if (!err && admins && admins.length > 0) {
+          const adminEmails = admins.map((a: any) => a.email);
+          const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: adminEmails,
+            subject: 'New Expense Submitted',
+            text: `A new expense has been submitted.\n\nAmount: $${amount}\nDescription: ${description}\nSubmitted by User ID: ${req.user!.id}\nExpense ID: ${this.lastID}`
+          };
+          console.log('Sending email to admins:', adminEmails);
+          transporter.sendMail(mailOptions, (error: any, info: any) => {
+            if (error) {
+              console.error('Failed to send admin notification email:', error);
+            } else {
+              console.log('Admin notification email sent:', info.response);
+            }
+          });
+        } else {
+          console.log('No admin emails found or error occurred:', err);
+        }
+      });
+      console.log('Admin notification email logic executed.');
+
       res.status(201).json({
         id: this.lastID,
         message: 'Expense submitted successfully'

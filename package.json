@@ -25,5 +25,8 @@
     "@types/react-router-dom": "^5.3.3",
     "concurrently": "^8.2.2",
     "jest-mock": "^30.0.2"
+  },
+  "dependencies": {
+    "nodemailer": "^7.0.5"
   }
 }
