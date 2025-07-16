@@ -14,6 +14,19 @@ interface ExpenseForm {
   category: string;
 }
 
+// Helper for file validation
+export function validateFileTypeAndSize(file: File): boolean {
+  if (!file.type.startsWith('image/')) {
+    toast.error('Only image files are allowed');
+    return false;
+  }
+  if (file.size === 0) {
+    toast.error('File is empty');
+    return false;
+  }
+  return true;
+}
+
 const SubmitExpense: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -27,8 +40,21 @@ const SubmitExpense: React.FC = () => {
 
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setSelectedImage(acceptedFiles[0]);
-      extractTextFromImage(acceptedFiles[0]);
+      const file = acceptedFiles[0];
+      if (!validateFileTypeAndSize(file)) {
+        return;
+      }
+      // Check if file is readable
+      const reader = new FileReader();
+      reader.onload = () => {
+        setSelectedImage(file);
+        console.log('File to upload from Folder:', file, file.type, file.size);
+        extractTextFromImage(file);
+      };
+      reader.onerror = () => {
+        toast.error('File is not readable or not reachable');
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -50,7 +76,13 @@ const SubmitExpense: React.FC = () => {
           .then(res => res.blob())
           .then(blob => {
             const file = new File([blob], 'receipt.jpg', { type: 'image/jpeg' });
+            // Validate file size
+            if (file.size === 0) {
+              toast.error('Captured image is empty');
+              return;
+            }
             setSelectedImage(file);
+            console.log('File to upload:', file, file.type, file.size);
             extractTextFromImage(file);
           });
       }
@@ -64,13 +96,17 @@ const SubmitExpense: React.FC = () => {
 
     try {
       const response = await api.post('/expenses/extract-receipt', formData);
+      console.log('Extract receipt response:', response);
       const { suggestedAmount } = response.data;
       if (suggestedAmount) {
         setExtractedAmount(suggestedAmount.replace('$', ''));
         setValue('amount', parseFloat(suggestedAmount.replace('$', '')));
+        toast.success('Receipt text extracted successfully!');
+      } else {
+        toast.error('No amount found in receipt.');
       }
-      toast.success('Receipt text extracted successfully!');
     } catch (error) {
+      console.error('Extract receipt error:', error);
       toast.error('Failed to extract text from receipt');
     } finally {
       setIsExtracting(false);
@@ -146,7 +182,7 @@ const SubmitExpense: React.FC = () => {
               isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
             }`}
           >
-            <input {...getInputProps()} />
+            <input {...getInputProps()} data-testid="dropzone-input" />
             <Upload size={48} className="mx-auto text-gray-400 mb-4" />
             {isDragActive ? (
               <p className="text-blue-500">Drop the receipt image here...</p>

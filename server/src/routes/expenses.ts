@@ -5,8 +5,15 @@ import { createWorker } from 'tesseract.js';
 import { body, validationResult } from 'express-validator';
 import { db } from '../database/init';
 import { AuthRequest, requireRole } from '../middleware/auth';
+import fs from 'fs';
 
 const router = express.Router();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../../uploads/');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
