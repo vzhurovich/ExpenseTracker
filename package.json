@@ -27,6 +27,7 @@
     "jest-mock": "^30.0.2"
   },
   "dependencies": {
-    "nodemailer": "^7.0.5"
+    "nodemailer": "^7.0.5",
+    "react-medium-image-zoom": "^5.2.0"
   }
 }

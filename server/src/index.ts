@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import path from 'path';
 
 import authRoutes from './routes/auth';
 import expenseRoutes from './routes/expenses';
@@ -39,6 +40,21 @@ app.use(cors({
 app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Add CORS for static files
+// app.use('/api/uploads', cors({
+//   origin: process.env.CLIENT_URL || "http://localhost:3000",
+//   credentials: true
+// }));
+
+// Serve static files from uploads directory with robust CORS headers
+app.use('/api/uploads', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', process.env.CLIENT_URL || "http://localhost:3000");
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);

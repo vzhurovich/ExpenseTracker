@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Eye, Download } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, Download, Image as ImageIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
+import ReceiptImageDialog from '../components/ReceiptImageDialog';
 
 interface Expense {
   id: number;
@@ -23,6 +26,8 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showReceiptDialog, setShowReceiptDialog] = useState(false);
+  const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPendingExpenses();
@@ -63,6 +68,8 @@ const AdminDashboard: React.FC = () => {
       </div>
     );
   }
+
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -142,6 +149,17 @@ const AdminDashboard: React.FC = () => {
                           <Eye size={16} />
                         </button>
                         <button
+                          onClick={() => {
+                            setReceiptImageUrl(`${apiUrl}/uploads/${expense.receipt_image}`);
+                            setShowReceiptDialog(true);
+                          }}
+                          className="text-indigo-600 hover:text-indigo-900"
+                          title="Preview Receipt Image"
+                          disabled={!expense.receipt_image}
+                        >
+                          <ImageIcon size={16} />
+                        </button>
+                        <button
                           onClick={() => handleApproval(expense.id, 'approved')}
                           className="text-green-600 hover:text-green-900"
                         >
@@ -211,11 +229,15 @@ const AdminDashboard: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700">Receipt Image</label>
                   {selectedExpense.receipt_image && (
                     <div className="mt-2">
-                      <img
-                        src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/${selectedExpense.receipt_image}`}
-                        alt="Receipt"
-                        className="w-full max-w-md mx-auto rounded-lg shadow-md"
-                      />
+                      <button
+                        className="text-indigo-600 hover:text-indigo-900 underline"
+                        onClick={() => {
+                          setReceiptImageUrl(`${apiUrl}/uploads/${selectedExpense.receipt_image}`);
+                          setShowReceiptDialog(true);
+                        }}
+                      >
+                        Preview Receipt Image
+                      </button>
                     </div>
                   )}
                 </div>
@@ -246,6 +268,11 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+      <ReceiptImageDialog
+        open={showReceiptDialog}
+        imageUrl={receiptImageUrl || ''}
+        onClose={() => setShowReceiptDialog(false)}
+      />
     </div>
   );
 };
