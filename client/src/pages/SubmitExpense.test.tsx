@@ -45,7 +45,7 @@ describe('SubmitExpense onDrop', () => {
   it('handles valid image file drop', async () => {
     // @ts-ignore
     const file = new File(['dummy'], 'receipt.png', { type: 'image/png', size: 123 });
-    (api.post as unknown as MockInstance<any, any>).mockResolvedValue({ data: { suggestedAmount: '$42.00' } });
+    (api.post as jest.Mock).mockResolvedValue({ data: { suggestedAmount: '$42.00' } });
     const { getByText, getByTestId, queryByText } = render(
       <MemoryRouter>
         <SubmitExpense />
