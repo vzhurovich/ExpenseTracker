@@ -22,6 +22,13 @@ interface Expense {
 }
 
 const AdminDashboard: React.FC = () => {
+  const TABS = [
+    { label: 'All', value: 'all' },
+    { label: 'Pending', value: 'pending' },
+    { label: 'Approved', value: 'approved' },
+    { label: 'Rejected', value: 'rejected' },
+  ];
+  const [selectedTab, setSelectedTab] = useState<string>('pending');
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
@@ -30,15 +37,22 @@ const AdminDashboard: React.FC = () => {
   const [receiptImageUrl, setReceiptImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchPendingExpenses();
-  }, []);
+    fetchExpenses(selectedTab);
+    // eslint-disable-next-line
+  }, [selectedTab]);
 
-  const fetchPendingExpenses = async () => {
+  const fetchExpenses = async (tab: string) => {
+    setLoading(true);
     try {
-      const response = await api.get('/expenses/pending');
+      let response;
+      if (tab === 'all') {
+        response = await api.get('/expenses/all');
+      } else {
+        response = await api.get(`/expenses/all?status=${tab}`);
+      }
       setExpenses(response.data);
     } catch (error) {
-      toast.error('Failed to fetch pending expenses');
+      toast.error('Failed to fetch expenses');
     } finally {
       setLoading(false);
     }
@@ -48,7 +62,7 @@ const AdminDashboard: React.FC = () => {
     try {
       await api.patch(`/expenses/${expenseId}/status`, { status, notes });
       toast.success(`Expense ${status} successfully`);
-      fetchPendingExpenses();
+      fetchExpenses(selectedTab);
       setShowModal(false);
       setSelectedExpense(null);
     } catch (error) {
@@ -77,8 +91,23 @@ const AdminDashboard: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
         
         <div className="mb-6">
+          <div className="flex space-x-2 mb-2">
+            {TABS.map((tab) => (
+              <button
+                key={tab.value}
+                className={`px-4 py-2 rounded-t-md font-semibold focus:outline-none border-b-2 transition-colors duration-150 ${
+                  selectedTab === tab.value
+                    ? 'border-blue-600 text-blue-700 bg-blue-50'
+                    : 'border-transparent text-gray-500 bg-gray-100 hover:bg-gray-200'
+                }`}
+                onClick={() => setSelectedTab(tab.value)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
           <h2 className="text-lg font-semibold text-gray-700 mb-2">
-            Pending Expenses ({expenses.length})
+            {TABS.find((t) => t.value === selectedTab)?.label} Expenses ({expenses.length})
           </h2>
         </div>
 
@@ -113,7 +142,16 @@ const AdminDashboard: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {expenses.map((expense) => (
-                  <tr key={expense.id} className="hover:bg-gray-50">
+                  <tr
+                    key={expense.id}
+                    className={`hover:bg-gray-50 ${
+                      expense.status === 'approved'
+                        ? 'bg-green-50'
+                        : expense.status === 'rejected'
+                        ? 'bg-red-50'
+                        : ''
+                    }`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">

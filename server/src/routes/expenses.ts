@@ -155,6 +155,32 @@ router.get('/pending', requireRole('admin'), async (req: AuthRequest, res) => {
   }
 });
 
+// Get all expenses (admin only, with optional status filter)
+router.get('/all', requireRole('admin'), async (req: AuthRequest, res) => {
+  try {
+    const { status } = req.query;
+    let query = `
+      SELECT e.*, u.first_name, u.last_name, u.email
+      FROM expenses e
+      JOIN users u ON e.user_id = u.id
+    `;
+    const params: any[] = [];
+    if (status && ['pending', 'approved', 'rejected'].includes(status as string)) {
+      query += ' WHERE e.status = ?';
+      params.push(status);
+    }
+    query += ' ORDER BY e.submitted_at DESC';
+    db.all(query, params, (err, expenses) => {
+      if (err) {
+        return res.status(500).json({ error: 'Database error' });
+      }
+      res.json(expenses);
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Approve/reject expense (admin only)
 router.patch('/:id/status', requireRole('admin'), [
   body('status').isIn(['approved', 'rejected']),
